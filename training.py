@@ -10,8 +10,10 @@ from nltk.stem import WordNetLemmatizer
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Activation, Dropout
 from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.callbacks import EarlyStopping
 
 import tensorflow as tf
+
 lemmatizer = WordNetLemmatizer()
 
 intents = json.loads(open('intents.json').read())
@@ -44,8 +46,8 @@ for document in documents:
     bag = []
     word_patterns = document[0]
     word_patterns = [lemmatizer.lemmatize(word.lower()) for word in word_patterns]
-for word in words:
-    bag.append(1) if word in word_patterns else bag.append(0)
+    for word in words:
+        bag.append(1) if word in word_patterns else bag.append(0)
 
     output_row = list(output_empty)
     output_row[classes.index(document[1])] = 1
@@ -67,6 +69,12 @@ model.add(Dense(len(train_y[0]), activation='softmax'))
 sgd = tf.keras.optimizers.legacy.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
 
-hist = model.fit(np.array(train_x), np.array(train_y), epochs=200, batch_size=5, verbose=1)
+early_stopping = EarlyStopping(monitor='val_loss', patience=10)
+
+hist = model.fit(np.array(train_x), np.array(train_y), epochs=200, batch_size=5, verbose=1, callbacks=[early_stopping], validation_split=0.2)
 model.save('chatbotmodel.h5', hist)
-print("done")
+print("Model training is complete!")
+
+except Exception as e:
+    print("Error: An unexpected error occurred during model training.")
+    print(e)
