@@ -2,6 +2,7 @@ import random
 import json
 import pickle
 import numpy as np
+import sys
 
 import nltk
 from nltk.stem import WordNetLemmatizer
@@ -53,10 +54,30 @@ def get_response(intents_list, intents_json):
             break
     return result
 
+def speak(text):
+    speech = gtts.gTTS(text=text, lang='en')
+    speech.save("response.mp3")
+    return
+
 print(" VITHUKAL IS RUNNING !")
 
 while True:
-    message = input()
+    message = input("Enter a message: ")
+    if message == "exit":
+        break
+    if not message:
+        print("Error: Empty message. Please enter a valid message.")
+        continue
+
     ints = predict_class(message)
     res = get_response(ints, intents)
     print(res)
+    speak(res)
+
+except KeyboardInterrupt:
+    print("Exiting Vithukal...")
+    sys.exit()
+
+except Exception as e:
+    print("Error: An unexpected error occurred.")
+    print(e)
